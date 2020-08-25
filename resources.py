@@ -3,7 +3,7 @@ from time import sleep
 
 # Webscrapper page elements
 
-# xpaths
+# xpaths :
 location_textbox = '//*[@id="container"]/header/div/div/div[2]/div/div/div[1]/div/div/input'
 keyword_textbox = '//*[@id="container"]/header/div/div/div[2]/div/div/div[2]/div/form/fieldset/div/input'
 first_location_item = '//*[@id="container"]/header/div/div/div[2]/div/div/div[1]/div/div[2]/div/div/div[1]'
@@ -12,13 +12,16 @@ min_price_textbox = '//*[@id="container"]/main/div/section/div/div/div[4]/div[1]
 max_price_textbox = '//*[@id="container"]/main/div/section/div/div/div[4]/div[1]/div/div[4]/div/div[2]/div/input[2]'
 price_filter_button = '//*[@id="container"]/main/div/section/div/div/div[4]/div[1]/div/div[4]/div/div[2]/div/a'
 
-# class names:
+# class names :
 max_results_available = '_3RsTo'
 result_items = 'EIR5N'
-load_more_button = 'rui-3sH3b rui-3K5JC rui-1zK8h'
+load_more_button = 'JbJAl'
 
-# Tag name
-# load_more_button = 'button'
+# Css Selector attribute names:
+
+features = ['value_make', 'value_model', 'value_variant',
+            'value_year', 'value_petrol', 'value_transmission',
+            'value_mileage', 'value_first_owner', 'itemPrice', 'itemTitle', 'itemLocation', 'itemDescriptionContent']
 
 # Scrolling page
 # Source Stackoverflow

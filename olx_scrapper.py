@@ -7,17 +7,14 @@ Date : 22/August/2020
 # Import Statements
 import pandas as pd
 from selenium.webdriver import Chrome
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException, WebDriverException
+from time import sleep
+from datetime import datetime
 import resources
 
-from time import sleep
-
-
 # function for scrapping data from olx site
-def get_links(keyword, location='', min_price='0', max_price='9223372036854776000',
-             web_driver_path='/', no_of_entries=100):
+def get_links(keyword, location='', min_price='0', max_price='9223372036854776000', web_driver_path='/',
+              no_of_entries=100):
     """
     This function scraps data from olx site (https://www.olx.in) and stores it as CSV file and
     returns the number of entries it scrapped.
@@ -44,9 +41,14 @@ def get_links(keyword, location='', min_price='0', max_price='922337203685477600
 
     """
 
-    # reference_url = "https://www.olx.in/"
     url = f"https://www.olx.in/"
-    driver = Chrome(web_driver_path,)
+    try:
+        driver = Chrome(web_driver_path,)
+    except WebDriverException:
+        print("WebDriver executable is not found in project folder. \n"
+              "Please enter the correct WebDriver path and re-run the code. \n"
+              "Program is now exiting...")
+        return -1
     driver.get(url)
     driver.maximize_window()
     sleep(2)
@@ -63,48 +65,40 @@ def get_links(keyword, location='', min_price='0', max_price='922337203685477600
 
     # After search results loads, appends url with min-max price vales and filters the results
     driver.get(f'{driver.current_url}&filter=price_between_{min_price}_to_{max_price}')
-    # driver.find_element_by_xpath(resources.price_filter_button).click()
     sleep(5)
 
     # Check whether no_of_entries is lesser or equal to actual number of results available on site
     num_of_available_results = int(driver.find_element_by_class_name(resources.max_results_available).text.split(' ')[0])
-    print(num_of_available_results)
     if num_of_available_results < no_of_entries:
         print(f"The actual number of results available on site is less than number of entries requested."
               f"Will try to load the maximum available {num_of_available_results} results, "
               f"instead of specified {no_of_entries} qty")
         no_of_entries = num_of_available_results
 
-    items = driver.find_elements_by_class_name(resources.result_items)
-    load_more_btn_dynamic_xpath = 22
-    while load_more_btn_dynamic_xpath-2 < no_of_entries:
+    entries_loaded = 20
+    while entries_loaded <= no_of_entries:
         resources.scroll_down(driver)
-        sleep(2)
-        print(load_more_btn_dynamic_xpath - 2)
-        load_button = \
-            f'//*[@id="container"]/main/div/section/div/div/div[4]/div[2]/div/div[2]/ul/li[{load_more_btn_dynamic_xpath}]/div/button'
-        load_button_present = EC.presence_of_element_located((By.XPATH, load_button))
-        WebDriverWait(driver, 10).until(load_button_present)
-        driver.find_element_by_xpath(load_button).click()
-        load_more_btn_dynamic_xpath += 20
+        print(f'Loaded {entries_loaded} results')
+        try:
+            driver.find_element_by_class_name(resources.load_more_button).click()
+            sleep(1)
+        except NoSuchElementException as e:
+            print('"Load More" button not found')
+            break
+        entries_loaded += 20
 
     items = driver.find_elements_by_class_name(resources.result_items)
     print(len(items))
-    with open("links.txt", "a+") as file:
+    with open(f'{datetime.now().strftime("%H_%M")}_{location}_links.txt', "w+") as file:
         for i in items:
             file.write(i.find_elements_by_tag_name('a')[0].get_property('href'))
+            file.write("\n")
+    sleep(5)
     driver.quit()
     return 0
-
-
-def get_data(url):
-    driver = Chrome(web_driver_path, )
-    driver.get(url)
-    driver.maximize_window()
-    sleep(2)
 
 
 # main program starts here
 if __name__ == "__main__":
     driver_path = r"C:\Users\krish\Documents\common_project_resources\chromedriver.exe"
-    get_links('car', 'chennai', min_price='50000', no_of_entries=1000, web_driver_path=driver_path)
+    get_links('car', location='chennai', min_price='50000', no_of_entries=1000, web_driver_path=driver_path)

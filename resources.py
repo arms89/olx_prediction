@@ -17,8 +17,7 @@ max_results_available = '_3RsTo'
 result_items = 'EIR5N'
 load_more_button = 'JbJAl'
 
-# Css Selector attribute names:
-
+# Css Selector attribute names of fields present in individual ad page:
 features = ['value_make', 'value_model', 'value_variant',
             'value_year', 'value_petrol', 'value_transmission',
             'value_mileage', 'value_first_owner', 'itemPrice', 'itemTitle', 'itemLocation', 'itemDescriptionContent']

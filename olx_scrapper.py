@@ -10,11 +10,15 @@ from selenium.webdriver import Chrome
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
 from time import sleep
 from datetime import datetime
+from pandas import DataFrame as df
+
+# DOM Resources file
 import resources
 
-# function for scrapping data from olx site
+
+# function for scrapping ad links from olx site
 def get_links(keyword, location='', min_price='0', max_price='9223372036854776000', web_driver_path='/',
-              no_of_entries=100):
+              no_of_entries=100, verbose=False):
     """
     This function scraps data from olx site (https://www.olx.in) and stores it as CSV file and
     returns the number of entries it scrapped.
@@ -38,7 +42,8 @@ def get_links(keyword, location='', min_price='0', max_price='922337203685477600
 
     no_of_entries= 100
         number of search results to fetch, by default 100 (max 1000 due to site limit).
-
+    verbose = boolean
+        displays progress at every 20 ad links fetched
     """
 
     url = f"https://www.olx.in/"
@@ -89,7 +94,8 @@ def get_links(keyword, location='', min_price='0', max_price='922337203685477600
 
     items = driver.find_elements_by_class_name(resources.result_items)
     print(len(items))
-    with open(f'{datetime.now().strftime("%H_%M")}_{location}_links.txt', "w+") as file:
+    # with open(f'{datetime.now().strftime("%H_%M")}_{location}_links.txt', "w+") as file:
+    with open('links.txt', "w+") as file:
         for i in items:
             file.write(i.find_elements_by_tag_name('a')[0].get_property('href'))
             file.write("\n")
@@ -98,7 +104,34 @@ def get_links(keyword, location='', min_price='0', max_price='922337203685477600
     return 0
 
 
+# function for scrapping data from the links collected previously by "get_links()" function
+def get_data(links_file, web_driver_path='/', verbose=False):
+
+    # Opens text file with ad links
+    with open(links_file, 'r') as file:
+        links = file.readlines()
+
+    driver = Chrome(web_driver_path, )
+    features = resources.features
+    data = []
+    for url in links:
+        temp = [url]
+        driver.get(url)
+        sleep(3)
+        for feature in features:
+            try:
+                temp.append(driver.find_element_by_css_selector(f'[data-aut-id={feature}]').text)
+            except NoSuchElementException:
+                temp.append(-1)
+        data.append(dict(zip(['link']+features, temp)))
+        if links.index(url) % 20 == 0 and verbose:
+            print(f'collected {links.index(url)} of {len(links)} records')
+    df(data).to_csv("test.csv", index=False, header=True)
+    driver.quit()
+
+
 # main program starts here
 if __name__ == "__main__":
     driver_path = r"C:\Users\krish\Documents\common_project_resources\chromedriver.exe"
-    get_links('car', location='chennai', min_price='50000', no_of_entries=1000, web_driver_path=driver_path)
+    # get_links('car', location='chennai', min_price='50000', no_of_entries=1000, web_driver_path=driver_path)
+    get_data('links.txt', web_driver_path=driver_path, verbose=True)

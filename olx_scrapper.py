@@ -7,7 +7,7 @@ Date : 22/August/2020
 # Import Statements
 import pandas as pd
 from selenium.webdriver import Chrome
-from selenium.common.exceptions import NoSuchElementException, WebDriverException
+import selenium.common.exceptions as e
 from time import sleep
 from datetime import datetime
 from pandas import DataFrame as df
@@ -87,15 +87,19 @@ def get_links(keyword, location='', min_price='0', max_price='922337203685477600
         try:
             driver.find_element_by_class_name(resources.load_more_button).click()
             sleep(1)
-        except NoSuchElementException as e:
+        except e.NoSuchElementException:
             print('"Load More" button not found')
             break
+        except e.ElementClickInterceptedException:
+            sleep(2)
+            entries_loaded -= 20
+
         entries_loaded += 20
 
     items = driver.find_elements_by_class_name(resources.result_items)
     print(len(items))
     # with open(f'{datetime.now().strftime("%H_%M")}_{location}_links.txt', "w+") as file:
-    with open('links.txt', "w+") as file:
+    with open('links.txt', "a+") as file:
         for i in items:
             file.write(i.find_elements_by_tag_name('a')[0].get_property('href'))
             file.write("\n")
@@ -109,8 +113,9 @@ def get_data(links_file, web_driver_path='/', verbose=False):
 
     # Opens text file with ad links
     with open(links_file, 'r') as file:
-        links = file.readlines()
+        links = set(file.readlines())
 
+    count = 0
     driver = Chrome(web_driver_path, )
     features = resources.features
     data = []
@@ -121,11 +126,14 @@ def get_data(links_file, web_driver_path='/', verbose=False):
         for feature in features:
             try:
                 temp.append(driver.find_element_by_css_selector(f'[data-aut-id={feature}]').text)
-            except NoSuchElementException:
+            except e.NoSuchElementException:
                 temp.append(-1)
         data.append(dict(zip(['link']+features, temp)))
-        if links.index(url) % 20 == 0 and verbose:
-            print(f'collected {links.index(url)} of {len(links)} records')
+        count += 1
+        if count % 100 == 0:
+            df(data).to_csv("test.csv", index=False, header=True,)
+        if verbose:
+            print(f'Collected {count} of {len(links)} records')
     df(data).to_csv("test.csv", index=False, header=True)
     driver.quit()
 
@@ -133,5 +141,7 @@ def get_data(links_file, web_driver_path='/', verbose=False):
 # main program starts here
 if __name__ == "__main__":
     driver_path = r"C:\Users\krish\Documents\common_project_resources\chromedriver.exe"
-    # get_links('car', location='chennai', min_price='50000', no_of_entries=1000, web_driver_path=driver_path)
+    locations = ['chennai', 'trichy', 'coimbatore', 'madurai']
+    for location in locations:
+        get_links('car', location=location, min_price='50000', no_of_entries=1000, web_driver_path=driver_path)
     get_data('links.txt', web_driver_path=driver_path, verbose=True)

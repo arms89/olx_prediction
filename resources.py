@@ -23,8 +23,8 @@ features = ['value_make', 'value_model', 'value_variant',
             'value_mileage', 'value_first_owner', 'itemPrice', 'itemTitle', 'itemLocation', 'itemDescriptionContent']
 
 # Scrolling page
-# Source Stackoverflow
-# https://stackoverflow.com/questions/48850974/selenium-scroll-to-end-of-page-in-dynamically-loading-webpage
+# Source: Stackoverflow
+# Link: https://stackoverflow.com/questions/48850974/selenium-scroll-to-end-of-page-in-dynamically-loading-webpage
 # Answered by Ratmir Asanov "https://stackoverflow.com/users/7901720/ratmir-asanov"
 
 

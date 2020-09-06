@@ -1,39 +1,48 @@
-from selenium.webdriver import Chrome
-from selenium.webdriver.chrome.options import Options
-from selenium.common import exceptions as e
-import resources
-
-from time import sleep
+import pandas as pd
+import numpy as np
 
 
-def get_data(links_file, web_driver_path='', verbose=False):
-    # Opens text file with ad links
-    with open(links_file, 'r') as file:
-        links = set(file.readlines())
-
-    count = 0
-    driver = Chrome()
-    features = resources.features
-    data = []
-    for url in list(links)[0:3]:
-        temp = [url]
-        driver.get(url)
-        sleep(1)
-        for feature in features:
-            try:
-                temp.append(driver.find_element_by_css_selector(f'[data-aut-id={feature}]').text)
-            except e.NoSuchElementException:
-                temp.append(None)
-        data.append(dict(zip(['link']+features, temp)))
-        count += 1
-        if count % 100 == 0:
-            # df(data).to_csv("test.csv", index=False, header=True,)
-            pass
-        if verbose:
-            print(f'Collected {count} of {len(links)} records')
-    # df(data).to_csv("test.csv", index=False, header=True)
-    print(data)
-    driver.quit()
+# Read data
+raw_data = pd.read_csv('olx.csv')
 
 
-get_data("links.txt")
+# raw data contains rows with all null
+# many unrelated data other than cars are present 
+# Column with urls, item title and description has to be removed
+# Price is in string format with rupees symbol
+# distance driven is in string format
+# 
+
+
+# Clean up useless null rows
+raw_data = raw_data[raw_data['value_make']!='-1']
+
+# Removing irrelevant brands
+raw_data = raw_data[~raw_data['value_make'].isin(['Ashok Leyland', 'Bharat Benz', 'Eicher', 'New Holland',
+                                                'Force Motors Ltd', 'John Deere', 'Mi', 'Lenovo', 'Motorola', 'Asus',
+                                                'Realme', 'Nokia', 'Other Mobiles', 'Samsung', 'KTM', 
+                                                'John Deere','SML', 'Messey Ferguson', 'Others', 'Other Brands',
+                                                'Premier', 'Piaggio', 'TAFE', 'TATA Motors'])]
+
+# removing unnecessary columns
+raw_data = raw_data.drop(['link', 'itemTitle', 'itemDescriptionContent'], axis=1) 
+
+# Converting price as integer
+raw_data['itemPrice'] = raw_data['itemPrice'].apply(lambda x: int(x[2:].replace(',', '')))
+
+# Converting distance driven in to integer
+raw_data['value_mileage'] = raw_data['value_mileage'].apply(lambda x: int(x.split(' ')[0].replace(',', '')))
+
+# replacing -1 with Nan
+raw_data.replace('-1', np.nan, inplace=True)
+
+raw_data.info()
+
+
+# splitting place data into 3 seperate columns and appending them to raw_data
+place = raw_data['itemLocation'].str.split(',', expand=True)
+place = place.rename(columns = {0: 'locality',1: 'district', 2: 'State'})
+raw_data = pd.concat([raw_data, place], axis=1)
+raw_data = raw_data.drop(['itemLocation'], axis=1)
+
+raw_data.to_csv("data_cleaned.csv",index=False, header=True)

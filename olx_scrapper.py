@@ -50,10 +50,10 @@ def get_links(keyword, location='', min_price='0', max_price='922337203685477600
         displays progress at every 20 ad links fetched
     """
 
-    url = f"https://www.olx.in/"
+    url = "https://www.olx.in/"
     try:
         driver = Chrome()
-    except WebDriverException:
+    except e.WebDriverException:
         print("WebDriver executable is not found in project folder. \n"
               "Please enter the correct WebDriver path and re-run the code. \n"
               "Program is now exiting...")

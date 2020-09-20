@@ -25,7 +25,7 @@ raw_data = raw_data[~raw_data['value_make'].isin(['Ashok Leyland', 'Bharat Benz'
                                                 'Premier', 'Piaggio', 'TAFE', 'TATA Motors'])]
 
 # removing unnecessary columns
-raw_data = raw_data.drop(['link', 'itemTitle', 'itemDescriptionContent'], axis=1) 
+raw_data = raw_data.drop(['link', ], axis=1)
 
 # Converting price as integer
 raw_data['itemPrice'] = raw_data['itemPrice'].apply(lambda x: int(x[2:].replace(',', '')))
@@ -36,13 +36,10 @@ raw_data['value_mileage'] = raw_data['value_mileage'].apply(lambda x: int(x.spli
 # replacing -1 with Nan
 raw_data.replace('-1', np.nan, inplace=True)
 
-raw_data.info()
-
-
 # splitting place data into 3 seperate columns and appending them to raw_data
 place = raw_data['itemLocation'].str.split(',', expand=True)
 place = place.rename(columns = {0: 'locality',1: 'district', 2: 'State'})
 raw_data = pd.concat([raw_data, place], axis=1)
 raw_data = raw_data.drop(['itemLocation'], axis=1)
 
-raw_data.to_csv("data_cleaned.csv",index=False, header=True)
+raw_data.to_csv("data_cleaned.csv", index=False, header=True)
